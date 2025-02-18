@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - Patient Info</title>
+  <style>
+    /* Reset & General Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+    body {
+      background: #fdfdfd; /* Pure white/light background */
+      color: #333;
+      overflow-x: hidden;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .dashboard-container {
+      max-width: 1100px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      border: 2px solid #e74c3c; /* Red border accent */
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      animation: containerFadeIn 1s forwards;
+    }
+    @keyframes containerFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #e74c3c;
+      padding-bottom: 10px;
+      animation: headerSlideDown 0.8s ease-out;
+    }
+    @keyframes headerSlideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .search-box input {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+      width: 250px;
+      transition: border 0.3s, transform 0.3s;
+      background: #fff;
+      color: #333;
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: #e74c3c;
+      transform: scale(1.02);
+    }
+    .search-box button {
+      padding: 10px 20px;
+      background: #e74c3c; /* Red accent */
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s, transform 0.3s;
+      animation: buttonBounce 1s infinite alternate;
+    }
+    @keyframes buttonBounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-3px); }
+    }
+    .btn-add-injection {
+      padding: 10px 20px;
+      background: linear-gradient(45deg, #c0392b, #e74c3c);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.3s, background 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-add-injection::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+      transform: rotate(45deg);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .btn-add-injection:hover::before {
+      opacity: 1;
+    }
+    .btn-add-injection:hover {
+      transform: scale(1.05);
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      animation: tableFadeIn 1s ease-in-out;
+      min-width: 600px; /* ensures table doesn't squish on mobile */
+    }
+    @keyframes tableFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    table thead {
+      background: #e74c3c;
+      color: #fff;
+    }
+    table th, table td {
+      padding: 12px 15px;
+      border: 1px solid #e0e0e0;
+      text-align: left;
+    }
+    table tbody tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    table tbody tr:hover {
+      background: #ffecec;
+      transform: scale(1.01);
+      transition: transform 0.2s;
+    }
+    .edit-btn {
+      padding: 5px 10px;
+      background: #007bff;
+      border: none;
+      border-radius: 3px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .edit-btn:hover {
+      background: #0056b3;
+    }
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      border-radius: 10px;
+      position: relative;
+    }
+    .modal-header {
+      margin-bottom: 15px;
+      font-size: 20px;
+      color: #e74c3c;
+    }
+    .modal-body label {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #333;
+    }
+    .modal-body input, .modal-body select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+    }
+    .modal-footer {
+      margin-top: 15px;
+      text-align: right;
+    }
+    .modal-footer button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .btn-save {
+      background: #28a745;
+      color: #fff;
+      margin-right: 10px;
+    }
+    .btn-save:hover {
+      background: #218838;
+    }
+    .btn-cancel {
+      background: #dc3545;
+      color: #fff;
+    }
+    .btn-cancel:hover {
+      background: #c82333;
+    }
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      .dashboard-container {
+        margin: 20px;
+        padding: 20px;
+      }
+      header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+      .search-box input {
+        width: 100%;
+        max-width: 300px;
+      }
+      .search-box button {
+        margin-top: 10px;
+      }
+      .btn-add-injection {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+      }
+    }
+    @media (max-width: 480px) {
+      .search-box input {
+        font-size: 14px;
+        padding: 8px;
+      }
+      .search-box button,
+      .btn-add-injection {
+        font-size: 14px;
+        padding: 8px 15px;
+      }
+      table th, table td {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <header>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by Patient ID" />
+        <button id="searchBtn">Search</button>
+      </div>
+      <button id="addInjectionBtn" class="btn-add-injection">Add Injection</button>
+    </header>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Patient ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Factor Type</th>
+            <th>Factor Level</th>
+            <th>Phone</th>
+            <th>Home Town</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="patientsTable">
+          <!-- Patient rows will be dynamically inserted here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal for Editing Patient Info -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">Edit Patient Information</div>
+      <div class="modal-body">
+        <input type="hidden" id="editPatientId" />
+        <label for="editName">Name:</label>
+        <input type="text" id="editName" />
+        <label for="editAge">Age:</label>
+        <input type="number" id="editAge" />
+        <label for="editFactorType">Factor Type:</label>
+        <select id="editFactorType">
+          <option value="Factor 8">Factor 8</option>
+          <option value="Factor 9">Factor 9</option>
+          <option value="Factor Level VWD">Factor Level VWD</option>
+          <option value="Others">Others</option>
+        </select>
+        <label for="editFactorLevel">Factor Level:</label>
+        <input type="text" id="editFactorLevel" />
+        <label for="editPhone">Phone:</label>
+        <input type="tel" id="editPhone" />
+        <label for="editHometown">Home Town:</label>
+        <input type="text" id="editHometown" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-save" id="saveBtn">Save Changes</button>
+        <button class="btn-cancel" id="cancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      onValue,
+      get,
+      update
+    } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-database.js";
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDiYYd00e0tuP04Rh9yMRyY1n29AdVxy0s",
+      authDomain: "hsb-patient-info-server.firebaseapp.com",
+      projectId: "hsb-patient-info-server",
+      storageBucket: "hsb-patient-info-server.firebasestorage.app",
+      messagingSenderId: "961640364490",
+      appId: "1:961640364490:web:fe98a28850659e7cf3f733"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const patientsRef = ref(db, 'patients');
+
+    // Function to render all patients in the table with an Edit button per row
+    function renderPatients(snapshot) {
+      const tbody = document.getElementById('patientsTable');
+      tbody.innerHTML = ''; // Clear existing data
+      snapshot.forEach(childSnapshot => {
+        const data = childSnapshot.val();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${data.patientId}</td>
+          <td>${data.name}</td>
+          <td>${data.age}</td>
+          <td>${data.factorType}</td>
+          <td>${data.factorLevel}</td>
+          <td>${data.phone}</td>
+          <td>${data.hometown}</td>
+          <td><button class="edit-btn" data-id="${data.patientId}">Edit</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      // Add event listeners for all Edit buttons
+      document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const patientId = e.target.getAttribute('data-id');
+          openEditModal(patientId);
+        });
+      });
+    }
+
+    // Fetch and display patients in real time
+    onValue(patientsRef, (snapshot) => {
+      renderPatients(snapshot);
+    });
+
+    // Search functionality
+    document.getElementById("searchBtn").addEventListener("click", () => {
+      const searchValue = document.getElementById("searchInput").value.trim();
+      if (!searchValue) {
+        alert("Please enter a Patient ID to search.");
+        return;
+      }
+      const filteredRef = ref(db, `patients/${searchValue}`);
+      get(filteredRef).then((snapshot) => {
+        const tbody = document.getElementById('patientsTable');
+        tbody.innerHTML = '';
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${data.patientId}</td>
+            <td>${data.name}</td>
+            <td>${data.age}</td>
+            <td>${data.factorType}</td>
+            <td>${data.factorLevel}</td>
+            <td>${data.phone}</td>
+            <td>${data.hometown}</td>
+            <td><button class="edit-btn" data-id="${data.patientId}">Edit</button></td>
+          `;
+          tbody.appendChild(tr);
+          // Attach event for the edit button in the search result
+          document.querySelector('.edit-btn').addEventListener('click', (e) => {
+            const patientId = e.target.getAttribute('data-id');
+            openEditModal(patientId);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="8">No patient found with this ID.</td></tr>';
+        }
+      }).catch((error) => {
+        console.error("Error fetching patient data:", error);
+      });
+    });
+
+    // Modal Elements
+    const editModal = document.getElementById('editModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const saveBtn = document.getElementById('saveBtn');
+
+    // Open Edit Modal & Populate Fields
+    function openEditModal(patientId) {
+      // Get patient data from Firebase
+      const patientRef = ref(db, `patients/${patientId}`);
+      get(patientRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          document.getElementById('editPatientId').value = data.patientId;
+          document.getElementById('editName').value = data.name;
+          document.getElementById('editAge').value = data.age;
+          document.getElementById('editFactorType').value = data.factorType;
+          document.getElementById('editFactorLevel').value = data.factorLevel;
+          document.getElementById('editPhone').value = data.phone;
+          document.getElementById('editHometown').value = data.hometown;
+          editModal.classList.add('active');
+        } else {
+          alert("Patient not found.");
+        }
+      }).catch((error) => {
+        console.error("Error fetching patient data:", error);
+      });
+    }
+
+    // Close modal when cancel is clicked
+    cancelBtn.addEventListener('click', () => {
+      editModal.classList.remove('active');
+    });
+
+    // Save Changes to Firebase
+    saveBtn.addEventListener('click', () => {
+      const patientId = document.getElementById('editPatientId').value;
+      const updatedData = {
+        name: document.getElementById('editName').value,
+        age: document.getElementById('editAge').value,
+        factorType: document.getElementById('editFactorType').value,
+        factorLevel: document.getElementById('editFactorLevel').value,
+        phone: document.getElementById('editPhone').value,
+        hometown: document.getElementById('editHometown').value
+      };
+      update(ref(db, 'patients/' + patientId), updatedData)
+        .then(() => {
+          alert("Patient information updated successfully!");
+          editModal.classList.remove('active');
+        })
+        .catch((error) => {
+          console.error("Error updating patient data:", error);
+        });
+    });
+
+    // "Add Injection" button functionality (for now, a simple redirect/alert)
+    document.getElementById("addInjectionBtn").addEventListener("click", () => {
+      alert("Redirecting to Add Injection page...");
+      // Example: window.location.href = "addInjection.html";
+    });
+  </script>
+</body>
+</html>
